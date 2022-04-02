@@ -4,8 +4,8 @@ from typing import Tuple, Any
 from selenium.webdriver.support.wait import WebDriverWait
 
 from config.url import PROBLEM_EXAMPLE_URL
-from process.base_process import BaseProcess
-from task.count_done import CountDoneTask
+from functional.process.base_process import BaseProcess
+from functional.task.count_task import CountDoneTask
 
 
 class CountProcess(BaseProcess):

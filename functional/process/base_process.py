@@ -12,5 +12,5 @@ class BaseProcess():
         self.driver: Edge = Driver().get_driver()
 
     @abstractmethod
-    def run(self) -> Tuple[bool, ...]:
+    def run(self, *args, **kwargs) -> Tuple[bool, ...]:
         pass

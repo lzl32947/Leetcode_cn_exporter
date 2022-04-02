@@ -4,6 +4,11 @@ import bs4
 
 
 def parse_count_done(documents: List[str]):
+    """
+    Parse the document
+    :param documents:
+    :return:
+    """
     general_output = []
     for index, content in enumerate(documents):
         soup = bs4.BeautifulSoup(content, 'html.parser')

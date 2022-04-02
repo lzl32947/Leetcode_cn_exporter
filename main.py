@@ -1,9 +1,9 @@
 from config.enums import Browser
 from config.options import Options
-from export.pandas_support import export_to_excel
-from parse.parse_count_done import parse_count_done
-from process.count_process import CountProcess
-from process.login import LoginProcess
+from functional.export.pandas_support import export_to_excel
+from functional.parse.count_parse import parse_count_done
+from functional.process.count_process import CountProcess
+from functional.process.login_process import LoginProcess
 from util.drivers import Driver
 
 try:
