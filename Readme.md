@@ -21,7 +21,7 @@ This script can export your code record (Solved) to csv file or excel file.
 ## Dependence 依赖
 
 ```shell
-pip install pandas selenium openpyxl beautifulsoup4
+pip install pandas selenium openpyxl beautifulsoup4 pyQt6
 ```
 
 ## Future Work 未来计划
