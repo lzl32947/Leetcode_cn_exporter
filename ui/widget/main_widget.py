@@ -1,5 +1,3 @@
-import os
-
 from PyQt6.QtCore import pyqtSignal, QThreadPool
 from PyQt6.QtWidgets import *
 
@@ -97,7 +95,7 @@ class MainWidget(QWidget):
         Driver().close()
         if result[0]:
             parse_result = parse_count_done(result[1])
-            export_to_excel(os.path.join("output", "done"), parse_result)
+            export_to_excel("done", parse_result)
 
     def login_event(self, user_passwd_tuple):
         user = user_passwd_tuple[0]
