@@ -33,7 +33,6 @@ class CountProcess(BaseProcess):
             else:
                 prev_document = document.text
                 documents.append(document.get_attribute("outerHTML"))
-                print(count)
                 count += 1
             CountDoneTask.find_next_page_button(self.driver).click()
 

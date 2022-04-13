@@ -1,7 +1,5 @@
-from PyQt6.QtCore import QThreadPool
+from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton
-
-from ui.runnable.login_thread import LoginThread
 
 
 class UserNameWidget(QWidget):
@@ -31,27 +29,25 @@ class PasswordWidget(QWidget):
 
 
 class LoginWidget(QWidget):
+    login_signal = pyqtSignal(tuple)
+
     def __init__(self):
         super().__init__()
-        self.threadpool = QThreadPool()
+        # Define the two widgets
         self.user_name_widget = UserNameWidget()
         self.passwd_widget = PasswordWidget()
-        self.inner_layout = QVBoxLayout()
-        self.setLayout(self.inner_layout)
+        # Add button
         self.login_button = QPushButton("Login")
-        self.inner_layout.addWidget(self.user_name_widget)
-        self.inner_layout.addWidget(self.passwd_widget)
-        self.inner_layout.addWidget(self.login_button)
+        # Set layout
+        layout = QVBoxLayout()
+        layout.addWidget(self.user_name_widget)
+        layout.addWidget(self.passwd_widget)
+        layout.addWidget(self.login_button)
+        self.setLayout(layout)
+        # Set Clicked
+        self.login_button.clicked.connect(self.login_click_event)
 
-        self.login_button.clicked.connect(self.login_thread)
-
-    def login_state(self, result):
-        print(result)
-
-    def login_thread(self):
-        username = self.user_name_widget.get_input()
+    def login_click_event(self):
+        user_name = self.user_name_widget.get_input()
         passwd = self.passwd_widget.get_input()
-
-        _thread = LoginThread(username=username, passwd=passwd)
-        _thread.signals.result.connect(self.login_state)
-        self.threadpool.start(_thread)
+        self.login_signal.emit((user_name, passwd))

@@ -1,5 +1,5 @@
 import time
-from typing import Tuple
+from typing import Tuple, List, Dict, Optional
 
 from selenium.webdriver.support.wait import WebDriverWait
 
@@ -10,12 +10,12 @@ from functional.task.login_task import LoginTask
 
 class LoginProcess(BaseProcess):
 
-    def run(self, *args, **kwargs) -> Tuple[bool, ...]:
+    def run(self, *args, **kwargs) -> Tuple[bool, Optional[List[Dict]]]:
         try:
             user = kwargs["user"]
             passwd = kwargs["passwd"]
         except KeyError as e:
-            return False,
+            return False, None
         self.driver.get(LOGIN_URL)
         WebDriverWait(self.driver, 2).until(lambda d: LoginTask.find_login_click_button(d))
         LoginTask.find_login_with_user_passwd_button(self.driver).click()
@@ -26,6 +26,6 @@ class LoginProcess(BaseProcess):
 
         time.sleep(5)
         if self.driver.current_url != LOGIN_URL:
-            return True,
+            return True, self.driver.get_cookies()
         else:
-            return False,
+            return False, None
