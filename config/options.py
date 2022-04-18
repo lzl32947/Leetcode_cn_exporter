@@ -4,7 +4,7 @@ from selenium.webdriver.common.options import ArgOptions
 from config.enums import Browser
 
 
-class Options(object):
+class WebOptions(object):
     """
     Custom the driver options
     """

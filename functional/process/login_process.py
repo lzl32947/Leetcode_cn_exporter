@@ -18,13 +18,15 @@ class LoginProcess(BaseProcess):
             return False, None
         self.driver.get(LOGIN_URL)
         WebDriverWait(self.driver, 2).until(lambda d: LoginTask.find_login_click_button(d))
+        time.sleep(0.5)
         LoginTask.find_login_with_user_passwd_button(self.driver).click()
 
         LoginTask.find_login_user(self.driver).send_keys(user)
         LoginTask.find_login_passwd(self.driver).send_keys(passwd)
+        time.sleep(0.5)
         LoginTask.find_login_click_button(self.driver).click()
 
-        time.sleep(5)
+        time.sleep(3)
         if self.driver.current_url != LOGIN_URL:
             return True, self.driver.get_cookies()
         else:

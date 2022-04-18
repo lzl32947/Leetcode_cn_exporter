@@ -6,7 +6,7 @@ from selenium.webdriver import Edge
 from util.drivers import Driver
 
 
-class BaseProcess():
+class BaseProcess(object):
 
     def __init__(self):
         self.driver: Edge = Driver().get_driver()

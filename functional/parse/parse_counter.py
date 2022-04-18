@@ -3,7 +3,7 @@ from typing import List
 import bs4
 
 
-def parse_count_done(documents: List[str]):
+def parse_counter(documents: List[str]):
     """
     Parse the document
     :param documents:

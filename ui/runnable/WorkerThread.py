@@ -5,6 +5,9 @@ from PyQt6.QtCore import pyqtSignal, QObject, QRunnable, pyqtSlot
 
 
 class WorkerSignals(QObject):
+    """
+    The signals defined for multi-threads
+    """
     finished = pyqtSignal()
     error = pyqtSignal(tuple)
     result = pyqtSignal(object)

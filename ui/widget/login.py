@@ -1,5 +1,5 @@
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QMessageBox
 
 
 class UserNameWidget(QWidget):
@@ -11,7 +11,11 @@ class UserNameWidget(QWidget):
         self.inner_layout.addWidget(QLabel("Username:"))
         self.inner_layout.addWidget(self.input_username)
 
-    def get_input(self):
+    def get_input(self) -> str:
+        """
+        Get the input from the lineEdit
+        :return: str, the input text
+        """
         return self.input_username.text()
 
 
@@ -25,10 +29,15 @@ class PasswordWidget(QWidget):
         self.inner_layout.addWidget(self.input_passwd)
 
     def get_input(self):
+        """
+        Get the input from the lineEdit
+        :return: str, the input text
+        """
         return self.input_passwd.text()
 
 
 class LoginWidget(QWidget):
+    # The signal for transferring the user and passwd
     login_signal = pyqtSignal(tuple)
 
     def __init__(self):
@@ -47,7 +56,14 @@ class LoginWidget(QWidget):
         # Set Clicked
         self.login_button.clicked.connect(self.login_click_event)
 
+    # Triggered by the "login_button.clicked"
     def login_click_event(self):
         user_name = self.user_name_widget.get_input()
         passwd = self.passwd_widget.get_input()
-        self.login_signal.emit((user_name, passwd))
+        if user_name == "" or passwd == "":
+            dlg = QMessageBox(self)
+            dlg.setWindowTitle("Invalid input!")
+            dlg.setText("You must input the valid username and passwd!")
+            button = dlg.exec()
+        else:
+            self.login_signal.emit((user_name, passwd))
