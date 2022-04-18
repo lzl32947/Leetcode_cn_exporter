@@ -1,3 +1,4 @@
+import re
 from typing import List
 
 import bs4
@@ -14,9 +15,17 @@ def parse_counter(documents: List[str]):
         soup = bs4.BeautifulSoup(content, 'html.parser')
         questions = soup.select(".question__3lUu")
         for item in questions:
-            difficult = item.select(".eaz8kc70")[0].text
-            name = item.select("span")[1].text
-            ids = item.get("data-question-id")
-            english_title = item.get("title")
-            general_output.append((ids, english_title, name, difficult))
+            difficulty = item.select(".eaz8kc70")[0].text
+            full_title = item.select("span")[1].text
+            problem_id = item.get("data-question-id")
+            link = item.get("title")
+            rx = re.compile(r"#(\d+\s|LCS\s\d+\s|剑指 Offer\s.*?\d+\s|面试题\s.*?\s|剑指 Offer\s.*?\d+-\s.*?\s)")
+            try:
+                result = rx.match(full_title)
+                result = result.group(0)
+            except AttributeError:
+                print(full_title)
+            identifier = result[1:-1]
+            title = full_title[len(identifier) + 2:]
+            general_output.append((problem_id, identifier, title, full_title, link, difficulty))
     return general_output

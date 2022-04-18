@@ -1,7 +1,7 @@
 import os.path
 import sqlite3
 import threading
-from typing import List
+from typing import List, Optional
 
 
 class SQLiteDriver(object):
@@ -21,31 +21,75 @@ class SQLiteDriver(object):
     def create_conn(self, database_name: str):
         if not database_name.endswith(".sqlite"):
             database_name = database_name + ".sqlite"
-        conn = sqlite3.connect(os.path.join("data", "db", database_name))
+        conn = sqlite3.connect(os.path.join("data", "db", database_name), check_same_thread=False)
         self.dicts[database_name] = conn
         if not self._has_init(conn):
             self._init_tabel(conn)
+
+    def insert_into_problems(self, database_name: str, data: List[tuple]):
+        if not database_name.endswith(".sqlite"):
+            database_name = database_name + ".sqlite"
+        if database_name in self.dicts.keys():
+            self._insert_into(self.dicts[database_name], "PROBLEMS", ["problem_id", "identifier", "title", "full_title", "link", "difficulty"], data)
+
+    def insert_into_tags(self, database_name: str, data: List[tuple]):
+        if not database_name.endswith(".sqlite"):
+            database_name = database_name + ".sqlite"
+        if database_name in self.dicts.keys():
+            self._insert_into(self.dicts[database_name], "TAGS", ["tag_name", "tag_link"], data)
+
+    def insert_into_problems_tags(self, database_name: str, data: List[tuple]):
+        if not database_name.endswith(".sqlite"):
+            database_name = database_name + ".sqlite"
+        if database_name in self.dicts.keys():
+            self._insert_into(self.dicts[database_name], "PROBLEMS_TAGS", ["problem_id", "tag_id"], data)
+
+    def find_tag_id(self, database_name: str, tag_name: Optional[str] = None, tag_link: Optional[str] = None):
+        if not database_name.endswith(".sqlite"):
+            database_name = database_name + ".sqlite"
+        if database_name in self.dicts.keys():
+            return self._find_tag_id(self.dicts[database_name], tag_name, tag_link)
+
+    def find_problem_not_exist_tag(self, database_name: str):
+        if not database_name.endswith(".sqlite"):
+            database_name = database_name + ".sqlite"
+        if database_name in self.dicts.keys():
+            result = self._find_problem_not_exist_tag(self.dicts[database_name])
+            return result
+        else:
+            return None
+
+    def find_exist(self, database_name: str, tabel: str, column: str, condition: str):
+        if not database_name.endswith(".sqlite"):
+            database_name = database_name + ".sqlite"
+        if database_name in self.dicts.keys():
+            return self._exist_in_single_table(self.dicts[database_name], tabel, column, condition)
+        else:
+            return None
 
     def close_conn(self, database_name: str):
         if not database_name.endswith(".sqlite"):
             database_name = database_name + ".sqlite"
         if database_name in self.dicts.keys():
             self.dicts[database_name].close()
+            del self.dicts[database_name]
 
     def close_all(self):
         for k in self.dicts.keys():
             self.dicts[k].close()
+            del self.dicts[k]
 
     @staticmethod
     def _init_tabel(conn: sqlite3.Connection):
         with conn:
             conn.execute("""
                 CREATE TABLE PROBLEMS(
-                    problem_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                    problem_id INTEGER NOT NULL PRIMARY key ,
                     identifier TEXT not null ,
                     title TEXT not null ,
+                    full_title TEXT not null ,
                     link TEXT not null unique ,
-                    difficulty INTEGER not null 
+                    difficulty TEXT not null 
                 );
             """)
             conn.execute("""
@@ -57,7 +101,7 @@ class SQLiteDriver(object):
             """)
 
             conn.execute("""
-                CREATE TABLE TAG_PROBLEMS(
+                CREATE TABLE PROBLEMS_TAGS(
                     problem_id INTEGER not null ,
                     tag_id INTEGER not null 
                 );
@@ -83,21 +127,21 @@ class SQLiteDriver(object):
     def _insert_into(conn: sqlite3.Connection, tabel: str, columns: List[str], data: List[tuple]):
         with conn:
             conn.executemany(
-                "INSERT INTO {} ({}) VALUES ({})".format(tabel, ",".join(columns), ",".join(["?" for i in range(len(columns))])),
+                "INSERT OR IGNORE INTO {} ({}) VALUES ({});".format(tabel, ",".join(columns), ",".join(["?" for i in range(len(columns))])),
                 data
             )
 
     @staticmethod
     def _find_in_single_table(conn: sqlite3.Connection, tabel: str, column: str, condition: str):
         ans = []
-        res = conn.execute("SELECT * FROM {} WHERE {} {}".format(tabel, column, condition))
+        res = conn.execute("SELECT * FROM {} WHERE {} {};".format(tabel, column, condition))
         for row in res:
             ans.append(row)
         return ans
 
     @staticmethod
     def _exist_in_single_table(conn: sqlite3.Connection, tabel: str, column: str, condition: str) -> bool:
-        res = conn.execute("SELECT COUNT(*) FROM {} WHERE {} {}".format(tabel, column, condition))
+        res = conn.execute("SELECT COUNT(*) FROM {} WHERE {} {};".format(tabel, column, condition))
         for row in res:
             if row[0] >= 1:
                 return True
@@ -105,5 +149,25 @@ class SQLiteDriver(object):
                 return False
 
     @staticmethod
-    def _find_tags_by_problem(conn: sqlite3.Connection):
-        pass
+    def _find_problem_not_exist_tag(conn: sqlite3.Connection):
+        ans = []
+        res = conn.execute(
+            """
+            SELECT PROBLEMS.problem_id,PROBLEMS.link
+            FROM PROBLEMS LEFT JOIN PROBLEMS_TAGS ON PROBLEMS.problem_id = PROBLEMS_TAGS.problem_id 
+            WHERE PROBLEMS_TAGS.problem_id is NULL;
+            """)
+        for row in res:
+            ans.append(row)
+        return ans
+
+    @staticmethod
+    def _find_tag_id(conn: sqlite3.Connection, tag_name: Optional[str], tag_link: Optional[str]):
+        if tag_name is None and tag_link is None:
+            return None
+        elif tag_name is None:
+            result = SQLiteDriver._find_in_single_table(conn, "TAGS", "tag_link", "=\"{}\"".format(tag_link))
+            return result[0][0]
+        else:
+            result = SQLiteDriver._find_in_single_table(conn, "TAGS", "tag_name", "=\"{}\"".format(tag_name))
+            return result[0][0]

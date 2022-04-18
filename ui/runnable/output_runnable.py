@@ -15,3 +15,6 @@ def output_to_files(cookies_store):
     if result[0]:
         parse_result = parse_counter(result[1])
         export_to_excel("done", parse_result)
+        return parse_result
+    else:
+        return None

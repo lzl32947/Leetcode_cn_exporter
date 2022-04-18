@@ -1,7 +1,9 @@
+from typing import Tuple, List
+
 import bs4
 
 
-def parse_tag(documents: str):
+def parse_tag(documents: str) -> List[Tuple[str, str]]:
     """
     Parse the document
     :param documents:

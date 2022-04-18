@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import QApplication
 
 from ui.main_window import MainWindow
 from util.settings import init_settings
+from util.sql import SQLiteDriver
 
 if __name__ == '__main__':
     # The main application
@@ -13,4 +14,5 @@ if __name__ == '__main__':
     window = MainWindow()
     window.show()
 
-    sys.exit(app.exec())
+    app.exec()
+    SQLiteDriver().close_all()
