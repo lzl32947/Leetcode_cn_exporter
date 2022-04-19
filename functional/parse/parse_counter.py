@@ -19,7 +19,7 @@ def parse_counter(documents: List[str]):
             full_title = item.select("span")[1].text
             problem_id = item.get("data-question-id")
             link = item.get("title")
-            rx = re.compile(r"#(\d+\s|LCS\s\d+\s|剑指 Offer\s.*?\d+\s|面试题\s.*?\s|剑指 Offer\s.*?\d+-\s.*?\s)")
+            rx = re.compile(r"#(\d+\s|LCS\s\d+\s|面试题\s.*?\s|剑指 Offer\s.*?\d+-\s.*?\s|剑指 Offer\s\d+\s-\s.*?\s|剑指 Offer\s.*?\d+\s)")
             try:
                 result = rx.match(full_title)
                 result = result.group(0)

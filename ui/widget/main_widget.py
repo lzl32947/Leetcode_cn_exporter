@@ -4,8 +4,9 @@ from PyQt6.QtCore import pyqtSignal, QThreadPool
 from PyQt6.QtWidgets import *
 
 from ui.runnable.WorkerThread import Worker
+from ui.runnable.export_runnable import export_from_sql_to_xlsx
 from ui.runnable.login_runnable import login_via_browser
-from ui.runnable.output_runnable import output_to_files
+from ui.runnable.output_runnable import output_problem_to_sqls
 from ui.runnable.tag_runnable import list_tags
 from ui.widget.login import LoginWidget
 from ui.widget.status import StatusWidget
@@ -34,25 +35,32 @@ class InnerStatusWidget(QWidget):
 
 
 class OperationPanelWidget(QWidget):
-    output_signal = pyqtSignal()
+    problem_signal = pyqtSignal()
+    export_signal = pyqtSignal()
     tag_signal = pyqtSignal()
 
     def __init__(self):
         super().__init__()
         layout = QVBoxLayout()
-        self.output_button = QPushButton("Export the record")
+        self.output_button = QPushButton("Download the solved problems")
         self.output_button.clicked.connect(self.on_output_clicked)
-        self.tag_button = QPushButton("Export tags")
+        self.tag_button = QPushButton("Download the corresponding tags")
         self.tag_button.clicked.connect(self.on_tag_clicked)
+        self.export_button = QPushButton("Export the previous")
+        self.export_button.clicked.connect(self.on_export_clicked)
         layout.addWidget(self.output_button)
         layout.addWidget(self.tag_button)
+        layout.addWidget(self.export_button)
         self.setLayout(layout)
 
     def on_output_clicked(self):
-        self.output_signal.emit()
+        self.problem_signal.emit()
 
     def on_tag_clicked(self):
         self.tag_signal.emit()
+
+    def on_export_clicked(self):
+        self.export_signal.emit()
 
 
 class MainWidget(QWidget):
@@ -63,15 +71,35 @@ class MainWidget(QWidget):
         self.left_widget = InnerStatusWidget()
         self.left_widget.login_signal.connect(self.login_event)
         self.right_widget = OperationPanelWidget()
-        self.right_widget.output_signal.connect(self.output_record_event)
-        self.right_widget.tag_signal.connect(self.tag_output_event)
+        self.right_widget.problem_signal.connect(self.store_solved_problems_event)
+        self.right_widget.tag_signal.connect(self.store_tags_event)
+        self.right_widget.export_signal.connect(self.export_from_db_event)
         layout = QHBoxLayout()
         layout.addWidget(self.left_widget)
         layout.addWidget(self.right_widget)
         self.setLayout(layout)
         self.dlg = QMessageBox()
 
-    def tag_output_event(self):
+    def export_from_db_event(self):
+        SQLiteDriver().create_conn("general")
+        worker = Worker(export_from_sql_to_xlsx, "general")
+        worker.signals.finished.connect(self.export_from_db_event_finished)
+        QThreadPool.globalInstance().start(worker)
+        self.dlg.setWindowTitle("Exporting")
+        self.dlg.setText("Exporting from database, please wait for a few seconds...")
+        self.dlg.exec()
+
+    def export_from_db_event_finished(self):
+        self.dlg.close()
+        QMessageBox.information(
+            self,
+            "Finish",
+            "Export Finish.\nSee the \"output\" directory for output.",
+            buttons=QMessageBox.StandardButton.Ok,
+            defaultButton=QMessageBox.StandardButton.Ok,
+        )
+
+    def store_tags_event(self):
         if self.store_problems is None or self.cookies_store is None:
             button = QMessageBox.critical(
                 self,
@@ -100,7 +128,7 @@ class MainWidget(QWidget):
             defaultButton=QMessageBox.StandardButton.Ok,
         )
 
-    def output_record_event(self):
+    def store_solved_problems_event(self):
         if self.cookies_store is None:
             button = QMessageBox.critical(
                 self,
@@ -110,26 +138,26 @@ class MainWidget(QWidget):
                 defaultButton=QMessageBox.StandardButton.Ok,
             )
         else:
-            worker = Worker(output_to_files, self.cookies_store)
-            worker.signals.result.connect(self.output_event_result)
-            worker.signals.finished.connect(self.output_event_finish)
+            worker = Worker(output_problem_to_sqls, self.cookies_store)
+            worker.signals.result.connect(self.store_solved_problems_event_result)
+            worker.signals.finished.connect(self.store_solved_problems_event_finish)
             QThreadPool.globalInstance().start(worker)
             self.dlg.setWindowTitle("Exporting")
-            self.dlg.setText("Exporting your record from leetcode-cn.com, please wait for a few seconds...")
+            self.dlg.setText("Exporting your solved problems from leetcode-cn.com, please wait for a few seconds...")
             self.dlg.exec()
 
-    def output_event_result(self, result: Optional[List[tuple]]):
+    def store_solved_problems_event_result(self, result: Optional[List[tuple]]):
         self.store_problems = result
         if result is not None:
             SQLiteDriver().create_conn("general")
             SQLiteDriver().insert_into_problems("general", result)
 
-    def output_event_finish(self):
+    def store_solved_problems_event_finish(self):
         self.dlg.close()
         button = QMessageBox.information(
             self,
             "Finish",
-            "Export Finish.\nYou can find it in \"output\" directory.",
+            "Export Finish.\nAll your solved problems are stores in database.",
             buttons=QMessageBox.StandardButton.Ok,
             defaultButton=QMessageBox.StandardButton.Ok,
         )

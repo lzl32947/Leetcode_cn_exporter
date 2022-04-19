@@ -67,6 +67,46 @@ class SQLiteDriver(object):
         else:
             return None
 
+    def find_all_problems(self, database_name: str):
+        if not database_name.endswith(".sqlite"):
+            database_name = database_name + ".sqlite"
+        if database_name in self.dicts.keys():
+            result = self._all_problems(self.dicts[database_name])
+            return result
+        else:
+            return None
+
+    def find_all_problems_with_tags(self, database_name: str):
+        if not database_name.endswith(".sqlite"):
+            database_name = database_name + ".sqlite"
+        if database_name in self.dicts.keys():
+            result = []
+            problem_result = self._all_problems(self.dicts[database_name])
+            for problem in problem_result:
+                problem_id = problem[0]
+                tag_list = self._find_tag_by_problem_id(self.dicts[database_name], problem_id)
+                item = [i for i in problem]
+                item.append(tag_list)
+                result.append(item)
+            return result
+        else:
+            return None
+
+    def find_all_problem_by_tags(self, database_name: str):
+        if not database_name.endswith(".sqlite"):
+            database_name = database_name + ".sqlite"
+        if database_name in self.dicts.keys():
+            result = {}
+            tag_result = self._all_tags(self.dicts[database_name])
+            for tag in tag_result:
+                tag_id = tag[0]
+                tag_name = tag[1]
+                problem_list = self._find_problems_by_tag(self.dicts[database_name], tag_id)
+                result[tag_name] = problem_list
+            return result
+        else:
+            return None
+
     def close_conn(self, database_name: str):
         if not database_name.endswith(".sqlite"):
             database_name = database_name + ".sqlite"
@@ -77,7 +117,6 @@ class SQLiteDriver(object):
     def close_all(self):
         for k in self.dicts.keys():
             self.dicts[k].close()
-            del self.dicts[k]
 
     @staticmethod
     def _init_tabel(conn: sqlite3.Connection):
@@ -171,3 +210,37 @@ class SQLiteDriver(object):
         else:
             result = SQLiteDriver._find_in_single_table(conn, "TAGS", "tag_name", "=\"{}\"".format(tag_name))
             return result[0][0]
+
+    @staticmethod
+    def _find_tag_by_problem_id(conn: sqlite3.Connection, problem_id: int):
+        result = conn.execute("SELECT tag_name FROM PROBLEMS NATURAL JOIN PROBLEMS_TAGS NATURAL JOIN TAGS WHERE problem_id={};".format(problem_id))
+        ans = []
+        for row in result:
+            ans.append(row[0])
+        return ans
+
+    @staticmethod
+    def _all_problems(conn: sqlite3.Connection):
+        result = conn.execute("SELECT * FROM PROBLEMS;")
+        ans = []
+        for row in result:
+            ans.append(row)
+        return ans
+
+    @staticmethod
+    def _all_tags(conn: sqlite3.Connection):
+        result = conn.execute("SELECT * FROM TAGS;")
+        ans = []
+        for row in result:
+            ans.append(row)
+        return ans
+
+    @staticmethod
+    def _find_problems_by_tag(conn: sqlite3.Connection, tag_id: int):
+        result = conn.execute(
+            "SELECT problem_id,identifier,title,full_title,link,difficulty FROM PROBLEMS NATURAL JOIN PROBLEMS_TAGS NATURAL JOIN TAGS WHERE tag_id={};".format(
+                tag_id))
+        ans = []
+        for row in result:
+            ans.append(row)
+        return ans
