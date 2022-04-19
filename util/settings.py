@@ -1,4 +1,5 @@
 import json
+import os.path
 from typing import Dict
 
 import config
@@ -13,6 +14,13 @@ def set_global_browser(name: str):
 
 
 def init_settings():
+    if not os.path.exists("output"):
+        os.mkdir("output")
+    if not os.path.exists("data"):
+        os.mkdir("data")
+    if not os.path.exists(os.path.join("data", "db")):
+        os.mkdir(os.path.join("data", "db"))
+
     try:
         with open("settings.json", "r", encoding="utf-8") as fin:
             settings: Dict = json.load(fin)

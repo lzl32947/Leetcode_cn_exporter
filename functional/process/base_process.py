@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Tuple
+from typing import Tuple, Any
 
 from selenium.webdriver import Edge
 
@@ -12,5 +12,5 @@ class BaseProcess(object):
         self.driver: Edge = Driver().get_driver()
 
     @abstractmethod
-    def run(self, *args, **kwargs) -> Tuple[bool, ...]:
+    def run(self, *args, **kwargs) -> Tuple[bool, Any]:
         pass
