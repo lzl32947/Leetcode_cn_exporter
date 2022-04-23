@@ -4,7 +4,7 @@ from PyQt6.QtCore import pyqtSignal, QThreadPool
 from PyQt6.QtWidgets import *
 
 from ui.runnable.WorkerThread import Worker
-from ui.runnable.export_runnable import export_from_sql_to_xlsx
+from ui.runnable.export_runnable import export_to_xlsx
 from ui.runnable.login_runnable import login_via_browser
 from ui.runnable.output_runnable import output_problem_to_sqls
 from ui.runnable.tag_runnable import list_tags
@@ -82,7 +82,7 @@ class MainWidget(QWidget):
 
     def export_from_db_event(self):
         SQLiteDriver().create_conn("general")
-        worker = Worker(export_from_sql_to_xlsx, "general")
+        worker = Worker(export_to_xlsx, "general")
         worker.signals.finished.connect(self.export_from_db_event_finished)
         QThreadPool.globalInstance().start(worker)
         self.dlg.setWindowTitle("Exporting")
